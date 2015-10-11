@@ -550,18 +550,16 @@ static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *str
 	if(emu_stream_source_auth)
 	{
 		snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
-				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
-				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
-				"Accept-Language: en-US\n"
+				"User-Agent: Wget/1.16 (linux-gnu)\n"
+				"Accept: */*\n"
 				"Authorization: Basic %s\n"
 				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port, emu_stream_source_auth);		
 	}
 	else			
 	{
 		snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
-				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
-				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
-				"Accept-Language: en-US\n"
+				"User-Agent: Wget/1.16 (linux-gnu)\n"
+				"Accept: */*\n"
 				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port);
 	}
 
@@ -670,16 +668,9 @@ static void *stream_client_handler(void *arg)
 		return NULL;
 	}
 	
-	cs_strncpy(stream_path_copy, stream_path, sizeof(stream_path));
-	
-	token = strtok_r(stream_path_copy, ":", &saveptr);
+	cs_strncpy(stream_path_copy, stream_path+1, sizeof(stream_path));
 
-	for(i=0; token != NULL && i<3; i++)
-	{
-		token = strtok_r(NULL, ":", &saveptr);
-		if(token == NULL)
-			{ break; }
-	}
+	token = strtok_r(stream_path_copy, ":", &saveptr);
 	if(token != NULL)
 	{
 		if(sscanf(token, "%x", &srvidtmp) < 1)
@@ -689,9 +680,19 @@ static void *stream_client_handler(void *arg)
 		else
 		{
 			data->srvid = srvidtmp & 0xFFFF;
+			cs_log("[Emu] stream requested SID: %s", token);
 		}
 	}
-
+	
+	token = strtok_r(NULL, ":", &saveptr);
+	if(token != NULL)
+	{
+		if(sscanf(token, "%s", stream_path) < 1)
+		{
+		      token = NULL;
+		}
+	}
+	
 	if(token == NULL)
 	{
 		NULLFREE(http_buf);
