@@ -178,12 +178,10 @@ static void ParsePATData(emu_stream_client_data *cdata)
 		if(srvid == 0)
 			{ continue; }
 		
-		if(cdata->srvid == srvid)
-		{
-			cdata->pmt_pid = b2i(2, data+i+2) & 0x1FFF;
-			cs_log_dbg(D_READER, "[Emu] stream found pmt pid: %X", cdata->pmt_pid);
-			break;
-		}
+		cdata->srvid = srvid;	// with PAT rewrite there is only our SID in the PAT
+		cdata->pmt_pid = b2i(2, data+i+2) & 0x1FFF;
+		cs_log_dbg(D_READER, "[Emu] stream found pmt pid: %X for sid %X", cdata->pmt_pid, srvid);
+		break;
 	}
 }
 
@@ -609,7 +607,7 @@ static void *stream_client_handler(void *arg)
 #define EMU_DVB_BUFFER_SIZE EMU_DVB_BUFFER_SIZE_CSA
 
 	emu_stream_client_conn_data *conndata = (emu_stream_client_conn_data *)arg;
-	char *http_buf, stream_path[255], stream_path_copy[255];
+	char *http_buf, stream_path[255];
 	int32_t streamfd;
 	int32_t clientStatus, streamStatus;
 	uint8_t *stream_buf;
@@ -620,8 +618,7 @@ static void *stream_client_handler(void *arg)
 	emu_stream_client_data *data;
 	int8_t streamConnectErrorCount = 0;
 	int8_t streamDataErrorCount = 0;
-	int32_t i, srvidtmp;
-	char *saveptr, *token;
+	int32_t i;
 	char http_version[4];
 	int32_t http_status_code = 0;	
 	
@@ -667,40 +664,9 @@ static void *stream_client_handler(void *arg)
 		stream_client_disconnect(conndata);
 		return NULL;
 	}
-	
-	cs_strncpy(stream_path_copy, stream_path+1, sizeof(stream_path));
 
-	token = strtok_r(stream_path_copy, ":", &saveptr);
-	if(token != NULL)
-	{
-		if(sscanf(token, "%x", &srvidtmp) < 1)
-		{
-			token = NULL;	
-		}
-		else
-		{
-			data->srvid = srvidtmp & 0xFFFF;
-			cs_log("[Emu] stream requested SID: %s", token);
-		}
-	}
-	
-	token = strtok_r(NULL, ":", &saveptr);
-	if(token != NULL)
-	{
-		if(sscanf(token, "%s", stream_path) < 1)
-		{
-		      token = NULL;
-		}
-	}
-	
-	if(token == NULL)
-	{
-		NULLFREE(http_buf);
-		NULLFREE(stream_buf);
-		NULLFREE(data);
-		stream_client_disconnect(conndata);
-		return NULL;
-	}
+//	ToDo: some kind of url check comming later :-)	
+
 
 #ifdef WITH_EMU
 	SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
