@@ -319,7 +319,12 @@ static void ParseTSPackets(emu_stream_client_data *data, uint8_t *stream_buf, ui
 				ParseTSData(0x00, 0xFF, 16, &data->have_pat_data, data->data, sizeof(data->data), &data->data_pos, payloadStart, 
 								stream_buf+i+offset, packetSize-offset, ParsePATData, data);
 			}
-		
+			else
+			{
+				stream_buf[1+i] |= 0x1f;
+				stream_buf[2+i]  = 0xff;
+			}
+
 			continue;
 		}
 
@@ -336,7 +341,12 @@ static void ParseTSPackets(emu_stream_client_data *data, uint8_t *stream_buf, ui
 				ParseTSData(0x02, 0xFF, 21, &data->have_pmt_data, data->data, sizeof(data->data), &data->data_pos, payloadStart, 
 								stream_buf+i+offset, packetSize-offset, ParsePMTData, data);
 			}
-		
+			else
+			{
+				stream_buf[1+i] |= 0x1f;
+				stream_buf[2+i]  = 0xff;
+			}
+
 			continue;
 		}
 
@@ -348,6 +358,9 @@ static void ParseTSPackets(emu_stream_client_data *data, uint8_t *stream_buf, ui
 			
 			ParseTSData(0x80, 0xFE, 10, &data->have_ecm_data, data->data, sizeof(data->data), &data->data_pos, payloadStart, 
 							stream_buf+i+offset, packetSize-offset, ParseECMData, data);
+			stream_buf[1+i] |= 0x1f;
+			stream_buf[2+i]  = 0xff;
+
 			continue;
 		}
 		
