@@ -707,7 +707,7 @@ static void *stream_client_handler(void *arg)
 		streamStatus = 0;
 		bytesRead = 0;
 		
-		while(!exit_oscam && clientStatus != -1 && streamStatus != -1 && streamConnectErrorCount < 3  && streamDataErrorCount < 15)
+		while(!exit_oscam && clientStatus != -1 && streamStatus != -1 && streamConnectErrorCount < 1  && streamDataErrorCount < 15)
 		{
 			if(data->key.pvu_csa_used)
 			{
